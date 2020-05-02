@@ -96,6 +96,17 @@ class AssetOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Co
   }
 }
 
+class FileOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Context) : OcarinaPlayer(url, volume, loop, context) {
+
+  override fun extractMediaSourceFromUri(uri: String): MediaSource {
+    val userAgent = getUserAgent(context, "ocarina");
+
+    return ExtractorMediaSource(Uri.parse(url),
+            DefaultDataSourceFactory(context,"ua"),
+            DefaultExtractorsFactory(), null, null);
+  }
+}
+
 /** OcarinaPlugin */
 public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
@@ -133,8 +144,7 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
       if (isAsset!!) {
         player = AssetOcarinaPlayer(url!!, volume!!, loop!!, context, flutterAssets);
       } else {
-        // TODO change this to the correct class
-        player = AssetOcarinaPlayer(url!!, volume!!, loop!!, context, flutterAssets);
+        player = FileOcarinaPlayer(url!!, volume!!, loop!!, context);
       }
       player.load();
 
