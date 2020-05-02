@@ -22,7 +22,7 @@ Using a file on the device filesystem
 
 ```dart
 final player = OcarinaPlayer(
-  filePath: 'assets/Loop-Menu.wav',
+  filePath: '/SomeWhere/On/The/Device/Loop-Menu.wav',
   loop: true,
   volume: 0.8,
 );
