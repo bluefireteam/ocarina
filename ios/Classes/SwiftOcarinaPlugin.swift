@@ -54,11 +54,12 @@ class LoopPlayer: Player {
 }
 
 class SinglePlayer: Player {
-    let player: AVPlayer
+    var player: AVAudioPlayer
     
     required init(url: String, volume: Double) {
-        player = AVPlayer(url: URL(fileURLWithPath: url ))
-        player.volume = Float(volume)
+        try! self.player = AVAudioPlayer(contentsOf: URL(fileURLWithPath: url ))
+        self.player.volume = Float(volume)
+        self.player.prepareToPlay()
     }
     
     func play() {
@@ -79,7 +80,7 @@ class SinglePlayer: Player {
     }
     
     func seek(position: Int) {
-        player.seek(to: CMTimeMakeWithSeconds(Float64(position / 1000), preferredTimescale: Int32(NSEC_PER_SEC)))
+        player.currentTime = Float64(position / 1000)
     }
     
     func volume(volume: Double) {
