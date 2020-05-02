@@ -35,7 +35,7 @@ abstract class OcarinaPlayer {
   }
 
   fun play() {
-    if(player.playbackState == Player.STATE_ENDED)
+    if (player.playbackState == Player.STATE_ENDED)
       player.seekTo(0);
     else if(player.playbackState == Player.STATE_IDLE)
       player.prepare(mediaSource);
@@ -107,7 +107,6 @@ class FileOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Con
   }
 }
 
-/** OcarinaPlugin */
 public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
   private val players = mutableMapOf<Int, OcarinaPlayer>();
@@ -140,11 +139,10 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
       val loop = call.argument<Boolean>("loop");
       val isAsset = call.argument<Boolean>("isAsset");
 
-      var player: OcarinaPlayer;
-      if (isAsset!!) {
-        player = AssetOcarinaPlayer(url!!, volume!!, loop!!, context, flutterAssets);
+      var player: OcarinaPlayer = if (isAsset!!) {
+        AssetOcarinaPlayer(url!!, volume!!, loop!!, context, flutterAssets);
       } else {
-        player = FileOcarinaPlayer(url!!, volume!!, loop!!, context);
+        FileOcarinaPlayer(url!!, volume!!, loop!!, context);
       }
       player.load();
 
@@ -156,39 +154,39 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
     } else if (call.method == "play") {
       val playerId = call.argument<Int>("playerId");
       val player = players[playerId!!];
-      player?.play();
+      player!!.play();
 
       result.success(0);
     } else if (call.method == "stop") {
       val playerId = call.argument<Int>("playerId");
       val player = players[playerId!!];
-      player?.stop();
+      player!!.stop();
 
       result.success(0);
     } else if (call.method == "pause") {
       val playerId = call.argument<Int>("playerId");
       val player = players[playerId!!];
-      player?.pause();
+      player!!.pause();
 
       result.success(0);
     } else if (call.method == "resume") {
       val playerId = call.argument<Int>("playerId");
       val player = players[playerId!!];
-      player?.resume();
+      player!!.resume();
 
       result.success(0);
     } else if (call.method == "seek") {
       val playerId = call.argument<Int>("playerId");
       val position = call.argument<Int>("position");
       val player = players[playerId!!];
-      player?.seek(position!!.toLong());
+      player!!.seek(position!!.toLong());
 
       result.success(0);
     } else if (call.method == "volume") {
       val playerId = call.argument<Int>("playerId");
       val volume = call.argument<Double>("volume");
       val player = players[playerId!!];
-      player?.volume(volume!!);
+      player!!.volume(volume!!);
 
       result.success(0);
     } else {
