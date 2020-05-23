@@ -1,6 +1,6 @@
 name: ocarina
-description: Play local audio files on flutter
-version: 0.0.1
+description: Play local (assets or external/internal storage) audio files with flutter on Android or iOS
+version: 0.0.2
 homepage: https://github.com/erickzanardo/ocarina
 
 environment:
