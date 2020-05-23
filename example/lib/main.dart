@@ -60,7 +60,15 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: (_player != null
-            ? PlayerWidget(player: _player)
+            ? PlayerWidget(
+                player: _player,
+                onBack: () {
+                  setState(() {
+                    _localFilePath = null;
+                    _fetchingFile = false;
+                    _player = null;
+                  });
+                })
             : Column(
                 children: [
                   RaisedButton(
@@ -81,7 +89,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       }),
                   RaisedButton(
-                      child: Text(_fetchingFile ? "Fetching file..." : "Download file to Device, and play it"),
+                      child: Text(_fetchingFile
+                          ? "Fetching file..."
+                          : "Download file to Device, and play it"),
                       onPressed: () async {
                         if (_fetchingFile) return;
                         setState(() {
@@ -105,8 +115,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class PlayerWidget extends StatelessWidget {
   final OcarinaPlayer player;
+  final VoidCallback onBack;
 
-  PlayerWidget({this.player});
+  PlayerWidget({this.player, this.onBack});
 
   @override
   Widget build(_) {
@@ -168,6 +179,16 @@ class PlayerWidget extends StatelessWidget {
                             player.updateVolume(1.0);
                           }),
                     ]),
+                    RaisedButton(
+                        child: Text("Dispose"),
+                        onPressed: () async {
+                          await player.dispose();
+                        }),
+                    RaisedButton(
+                        child: Text("Go Back"),
+                        onPressed: () async {
+                          onBack?.call();
+                        }),
                   ]);
           }
           return Container();

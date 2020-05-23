@@ -67,6 +67,14 @@ class OcarinaPlayer {
   }
 
   void _ensureLoaded() {
-    assert(_id != null, 'Player is not loaded yet, you must call load before.');
+    assert(isLoaded(), 'Player is not loaded yet, you must call load before.');
+  }
+
+  bool isLoaded() => _id != null;
+
+  Future<void> dispose() async {
+    _ensureLoaded();
+    await _channel.invokeMethod('dispose', {'playerId': _id});
+    _id = null;
   }
 }
