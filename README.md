@@ -30,13 +30,34 @@ final player = OcarinaPlayer(
 await player.load();
 ```
 
-## Methods
+## Docs 
 
 List of all available methods on the player instance
 
- - `play`
- - `pause`
- - `resume`
- - `stop`
- - `seek(Duration)`
- - `updateVolume(double)` - Value between 0 and 1
+`play`
+
+Starts playing
+
+`pause`
+
+Pauses playback
+
+`resume`
+
+Resume when playback if it was previously paused
+
+`stop`
+
+Stops the playback, it can be started again by calling `play` again.
+
+`seek(Duration)`
+
+Moves the playback postion to the passed `Duration`
+
+`updateVolume(double)`
+
+Updates the volume, must be a value between 0 and 1
+
+`dispose`
+
+Clears the loaded resources in memory, to use the instance again a subsequent call on the `load` method is required
