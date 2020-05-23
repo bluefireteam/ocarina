@@ -142,6 +142,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.play()
+                result(0)
             }
         } else if (call.method == "pause") {
                    guard let args = call.arguments else {
@@ -153,6 +154,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                        
                        let player = SwiftOcarinaPlugin.players[playerId]
                        player?.pause()
+                       result(0)
                    }
         } else if (call.method == "stop") {
             guard let args = call.arguments else {
@@ -164,6 +166,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.stop()
+                result(0)
             }
             
         } else if (call.method == "volume") {
@@ -177,6 +180,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.volume(volume: volume)
+                result(0)
             }
         } else if (call.method == "resume") {
             guard let args = call.arguments else {
@@ -188,6 +192,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.resume()
+                result(0)
             }
         } else if (call.method == "seek") {
             guard let args = call.arguments else {
@@ -200,6 +205,20 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.seek(position: positionInMillis)
+                result(0)
+            }
+        } else if (call.method == "dispose") {
+            guard let args = call.arguments else {
+                return;
+            }
+            
+            if let myArgs = args as? [String: Any],
+                let playerId: Int = myArgs["playerId"] as? Int {
+                
+                let player = SwiftOcarinaPlugin.players[playerId]
+                player?.stop()
+                SwiftOcarinaPlugin.players[playerId] = nil
+                result(0)
             }
         }
     }
