@@ -18,6 +18,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
+import java.lang.RuntimeException
 
 abstract class OcarinaPlayer {
   protected var volume: Double;
@@ -34,7 +35,23 @@ abstract class OcarinaPlayer {
     this.context = context;
   }
 
+  // trying to track https://github.com/erickzanardo/ocarina/issues/4
+  private fun checkInitialized() {
+      if (!this::player.isInitialized) {
+        throw RuntimeException("Player is not initialized");
+      }
+    if (!this::mediaSource.isInitialized) {
+      throw RuntimeException("MediaSource is not initialized");
+    }
+  }
+
+  fun dispose() {
+    checkInitialized();
+    player.release();
+  }
+
   fun play() {
+    checkInitialized();
     if (player.playbackState == Player.STATE_ENDED)
       player.seekTo(0);
     else if(player.playbackState == Player.STATE_IDLE)
@@ -44,18 +61,25 @@ abstract class OcarinaPlayer {
   }
 
   fun stop() {
+    checkInitialized();
     player.stop();
   }
 
   fun pause() {
+    checkInitialized();
     player.playWhenReady = false;
   }
 
   fun resume() {
+    checkInitialized();
     player.playWhenReady = true;
   }
 
   fun load() {
+    // trying to track https://github.com/erickzanardo/ocarina/issues/4
+    if (context == null) {
+      throw RuntimeException("Context is null");
+    }
     player = SimpleExoPlayer.Builder(context).build();
     if (loop)
       player.repeatMode = Player.REPEAT_MODE_ALL;
@@ -66,10 +90,12 @@ abstract class OcarinaPlayer {
   }
 
   fun seek(position: Long) {
+    checkInitialized();
     player.seekTo(position);
   }
 
   fun volume(volume: Double) {
+    checkInitialized();
     this.volume = volume;
     player.volume = volume.toFloat();
   }
@@ -85,6 +111,11 @@ class AssetOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Co
   }
 
   override fun extractMediaSourceFromUri(uri: String): MediaSource {
+    // trying to track https://github.com/erickzanardo/ocarina/issues/4
+    if (!this::flutterAssets.isInitialized) {
+      throw RuntimeException("FlutterAssets is not initialized");
+    }
+
     val userAgent = getUserAgent(context, "ocarina");
 
     val assetUrl = flutterAssets.getAssetFilePathByName(uri);
@@ -187,6 +218,13 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
       val volume = call.argument<Double>("volume");
       val player = players[playerId!!];
       player!!.volume(volume!!);
+
+      result.success(0);
+    } else if (call.method == "dispose") {
+      val playerId = call.argument<Int>("playerId");
+      val player = players[playerId!!];
+      player!!.dispose();
+      players.remove(playerId!!);
 
       result.success(0);
     } else {
