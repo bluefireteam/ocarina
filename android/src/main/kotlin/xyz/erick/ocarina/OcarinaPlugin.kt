@@ -103,11 +103,13 @@ abstract class OcarinaPlayer {
   abstract fun extractMediaSourceFromUri(uri: String): MediaSource;
 }
 
-class AssetOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Context) : OcarinaPlayer(url, volume, loop, context) {
+class AssetOcarinaPlayer(url: String, packageName: String?, volume: Double, loop: Boolean, context: Context) : OcarinaPlayer(url, volume, loop, context) {
   private lateinit var flutterAssets: FlutterPlugin.FlutterAssets;
+  private var packageName: String? = null;
 
-  constructor(url: String, volume: Double, loop: Boolean, context: Context, flutterAssets: FlutterPlugin.FlutterAssets): this(url, volume, loop, context) {
+  constructor(url: String, packageName: String?, volume: Double, loop: Boolean, context: Context, flutterAssets: FlutterPlugin.FlutterAssets): this(url, packageName, volume, loop, context) {
     this.flutterAssets = flutterAssets;
+    this.packageName = packageName;
   }
 
   override fun extractMediaSourceFromUri(uri: String): MediaSource {
@@ -118,7 +120,7 @@ class AssetOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Co
 
     val userAgent = getUserAgent(context, "ocarina");
 
-    val assetUrl = flutterAssets.getAssetFilePathByName(uri);
+    val assetUrl = if (packageName != null) flutterAssets.getAssetFilePathByName(uri, packageName!!) else flutterAssets.getAssetFilePathByName(uri);
 
     // find file on assets
     return ExtractorMediaSource(Uri.parse("file:///android_asset/" + assetUrl),
@@ -166,12 +168,13 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
     if (call.method == "load") {
       val id = playerIds;
       val url = call.argument<String>("url");
+      val packageName = call.argument<String>("package");
       val volume = call.argument<Double>("volume");
       val loop = call.argument<Boolean>("loop");
       val isAsset = call.argument<Boolean>("isAsset");
 
       var player: OcarinaPlayer = if (isAsset!!) {
-        AssetOcarinaPlayer(url!!, volume!!, loop!!, context, flutterAssets);
+        AssetOcarinaPlayer(url!!, packageName, volume!!, loop!!, context, flutterAssets);
       } else {
         FileOcarinaPlayer(url!!, volume!!, loop!!, context);
       }

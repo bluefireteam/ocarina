@@ -112,10 +112,14 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 let isAsset: Bool = myArgs["isAsset"] as? Bool,
                 let loop: Bool = myArgs["loop"] as? Bool {
                 
-                
                 var assetUrl: String
                 if (isAsset) {
-                    let key = registrar?.lookupKey(forAsset: url)
+                    let key: String?
+                    if let package: String = myArgs["package"] as? String {
+                     key = registrar?.lookupKey(forAsset: url, fromPackage: package)
+                    } else {
+                     key = registrar?.lookupKey(forAsset: url)
+                    }
                     assetUrl = Bundle.main.path(forResource: key, ofType: nil)!
                 } else {
                     assetUrl = url
