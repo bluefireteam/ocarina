@@ -1,3 +1,7 @@
+## 0.0.3
+
+ * Adding optional package name parameter when using assets
+
 ## 0.0.2
 
  * Adding isLoaded method
