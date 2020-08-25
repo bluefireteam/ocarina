@@ -11,6 +11,7 @@ Using a file on your assets
 ```dart
 final player = OcarinaPlayer(
   asset: 'assets/Loop-Menu.wav',
+  package: 'my_package_name',
   loop: true,
   volume: 0.8,
 );
