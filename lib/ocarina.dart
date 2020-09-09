@@ -11,10 +11,12 @@ class OcarinaPlayer {
   final bool loop;
 
   String asset;
+  String package;
   String filePath;
 
   OcarinaPlayer({
     this.asset,
+    this.package,
     this.filePath,
     this.volume = 1.0,
     this.loop = false,
@@ -29,6 +31,7 @@ class OcarinaPlayer {
   Future<void> load() async {
     _id = await _channel.invokeMethod('load', {
       'url': asset ?? filePath,
+      'package': package,
       'volume': volume,
       'loop': loop,
       'isAsset': asset != null,
