@@ -29,13 +29,17 @@ class OcarinaPlayer {
 
   /// Loads your asset or file, no other operation can be performed on this instance before this is called
   Future<void> load() async {
-    _id = await _channel.invokeMethod('load', {
-      'url': asset ?? filePath,
-      'package': package,
-      'volume': volume,
-      'loop': loop,
-      'isAsset': asset != null,
-    });
+    try {
+      _id = await _channel.invokeMethod('load', {
+        'url': asset ?? filePath,
+        'package': package,
+        'volume': volume,
+        'loop': loop,
+        'isAsset': asset != null,
+      });
+    } on PlatformException catch (e) {
+      throw e;
+    }
   }
 
   Future<void> play() async {

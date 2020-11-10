@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart';
-
 import 'package:ocarina/ocarina.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() => runApp(MyApp());
 
@@ -131,7 +130,16 @@ class PlayerWidget extends StatelessWidget {
               return Text("Loading player");
             case ConnectionState.done:
               if (snapshot.hasError) {
-                return Text("Error loading player");
+                return Column(
+                  children: [
+                    Text("Error loading player"),
+                    RaisedButton(
+                        child: Text("Go Back"),
+                        onPressed: () async {
+                          onBack?.call();
+                        }),
+                  ],
+                );
               }
               return Column(
                   mainAxisAlignment: MainAxisAlignment.center,

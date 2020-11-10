@@ -120,7 +120,12 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                     } else {
                      key = registrar?.lookupKey(forAsset: url)
                     }
-                    assetUrl = Bundle.main.path(forResource: key, ofType: nil)!
+
+                    if let url = Bundle.main.path(forResource: key, ofType: nil) {
+                        assetUrl = url
+                    } else {
+                        return result(FlutterError(code: "ASSET_URL_NOT_FOUND", message: "key: " + (key ?? ""), details: nil))
+                    }
                 } else {
                     assetUrl = url
                 }
