@@ -134,10 +134,9 @@ class PlayerWidget extends StatelessWidget {
                   children: [
                     Text("Error loading player"),
                     RaisedButton(
-                        child: Text("Go Back"),
-                        onPressed: () async {
-                          onBack?.call();
-                        }),
+                      child: Text("Go Back"),
+                      onPressed: onBack?.call,
+                    ),
                   ],
                 );
               }
@@ -151,40 +150,40 @@ class PlayerWidget extends StatelessWidget {
                         }),
                     RaisedButton(
                         child: Text("Stop"),
-                        onPressed: () {
-                          player.stop();
+                        onPressed: () async {
+                          await player.stop();
                         }),
                     RaisedButton(
                         child: Text("Pause"),
-                        onPressed: () {
-                          player.pause();
+                        onPressed: () async {
+                          await player.pause();
                         }),
                     RaisedButton(
                         child: Text("Resume"),
-                        onPressed: () {
-                          player.resume();
+                        onPressed: () async {
+                          await player.resume();
                         }),
                     RaisedButton(
                         child: Text("Seek to 5 secs"),
-                        onPressed: () {
-                          player.seek(Duration(seconds: 5));
+                        onPressed: () async {
+                          await player.seek(Duration(seconds: 5));
                         }),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text("Volume"),
                       RaisedButton(
                           child: Text("0.2"),
-                          onPressed: () {
-                            player.updateVolume(0.2);
+                          onPressed: () async {
+                            await player.updateVolume(0.2);
                           }),
                       RaisedButton(
                           child: Text("0.5"),
-                          onPressed: () {
-                            player.updateVolume(0.5);
+                          onPressed: () async {
+                            await player.updateVolume(0.5);
                           }),
                       RaisedButton(
                           child: Text("1.0"),
-                          onPressed: () {
-                            player.updateVolume(1.0);
+                          onPressed: () async {
+                            await player.updateVolume(1.0);
                           }),
                     ]),
                     RaisedButton(
@@ -193,10 +192,9 @@ class PlayerWidget extends StatelessWidget {
                           await player.dispose();
                         }),
                     RaisedButton(
-                        child: Text("Go Back"),
-                        onPressed: () async {
-                          onBack?.call();
-                        }),
+                      child: Text("Go Back"),
+                      onPressed: onBack?.call,
+                    ),
                   ]);
           }
           return Container();
