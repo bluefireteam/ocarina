@@ -25,6 +25,13 @@ class LoopPlayer: Player {
         playerLooper = AVPlayerLooper(player: player, templateItem: playerItem)
         
         player.volume = Float(volume)
+        
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.ambient, options: AVAudioSession.CategoryOptions.mixWithOthers)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch let error {
+            print(error)
+        }
     }
     
     func play() {
