@@ -94,9 +94,11 @@ class PlayerDelegate {
     let pauseDelegate: PauseDelegate
     let resumeDelegate: ResumeDelegate
     let stopDelegate: StopDelegate
+    let seekDelegate: SeekDelegate
     let volumeDelegate: VolumeDelegate
     
     func load(_ id: Int, assetUrl: String, volume: Double, loop: Bool) {
+        NSLog("Ocarina::PlayerDelegate => loading player \(id) from \(assetUrl) with delegate")
         let url: URL = URL(fileURLWithPath: assetUrl)
         let fileForPlayback: AVAudioFile?
         do {
@@ -115,32 +117,43 @@ class PlayerDelegate {
     }
     
     func play(_ id: Int) {
+        NSLog("Ocarina::PlayerDelegate => playing \(id) with delegate")
         playDelegate(id)
     }
 
     func pause(_ id: Int) {
+        NSLog("Ocarina::PlayerDelegate => pausing \(id) with delegate")
         pauseDelegate(id)
     }
 
     func resume(_ id: Int) {
+        NSLog("Ocarina::PlayerDelegate => resuming \(id) with delegate")
         resumeDelegate(id)
     }
 
     func stop(_ id: Int) {
+        NSLog("Ocarina::PlayerDelegate => stopping \(id) with delegate")
         stopDelegate(id)
     }
 
     func volume(_ id: Int, volume: Double) {
+        NSLog("Ocarina::PlayerDelegate => setting volume for player \(id) to \(volume) with delegate")
         volumeDelegate(id, volume)
     }
     
-    init(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate) {
+    func seek(_ id: Int, positionInMillis: Int) {
+        NSLog("Ocarina::PlayerDelegate => seeking for player \(id) to position \(positionInMillis) ms")
+        seekDelegate(id, positionInMillis)
+    }
+    
+    init(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate) {
         loadDelegate = load
         playDelegate = play
         pauseDelegate = pause
         resumeDelegate = resume
         stopDelegate = stop
         volumeDelegate = volume
+        seekDelegate = seek
     }
 }
 
@@ -150,6 +163,7 @@ public typealias PauseDelegate = (_ id: Int) -> Void
 public typealias ResumeDelegate = (_ id: Int) -> Void
 public typealias StopDelegate = (_ id: Int) -> Void
 public typealias VolumeDelegate = (_ id: Int, _ volume: Double) -> Void
+public typealias SeekDelegate = (_ id: Int, _ positionInMillis: Int) -> Void
 
 public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
     static var players = [Int: Player]()
@@ -164,8 +178,8 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
         instance.registrar = registrar
     }
 
-    public static func useDelegate(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate) {
-        delegate = PlayerDelegate(load: load, play: play, pause: pause, resume: resume, stop: stop, volume: volume)
+    public static func useDelegate(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate) {
+        delegate = PlayerDelegate(load: load, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -333,7 +347,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             let positionInMillis: Int = myArgs["position"] as? Int {
             
             if let delegate = SwiftOcarinaPlugin.delegate {
-                result(FlutterMethodNotImplemented)
+                delegate.seek(playerId, positionInMillis: positionInMillis)
             } else {
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.seek(position: positionInMillis)
