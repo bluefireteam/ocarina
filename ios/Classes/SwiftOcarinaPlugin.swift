@@ -10,6 +10,7 @@ protocol Player {
     func resume() -> Void
     func seek(position: Int) -> Void
     func volume(volume: Double) -> Void
+    func position() -> Int64?
 }
 
 class LoopPlayer: Player {
@@ -20,7 +21,7 @@ class LoopPlayer: Player {
         let asset = AVAsset(url: URL(fileURLWithPath: url ))
         
         let playerItem = AVPlayerItem(asset: asset)
-        
+
         player = AVQueuePlayer(items: [playerItem])
         playerLooper = AVPlayerLooper(player: player, templateItem: playerItem)
         
@@ -51,6 +52,18 @@ class LoopPlayer: Player {
     func volume(volume: Double) {
         player.volume = Float(volume)
     }
+    
+    func position() -> Int64? {
+        guard let value = player.currentItem?.currentTime().value,
+              let timescale = player.currentItem?.currentTime().timescale else {
+            return nil
+        }
+        
+        let positionInMillis = Int64((Float64(value) / Float64(timescale)) * 1000)
+        
+        NSLog("Ocarina::LoopPlayer => position (ms): \(positionInMillis)")
+        return positionInMillis
+    }
 }
 
 class SinglePlayer: Player {
@@ -80,11 +93,18 @@ class SinglePlayer: Player {
     }
     
     func seek(position: Int) {
-        player.currentTime = Float64(position / 1000)
+        player.currentTime = Float64(position) / 1000
     }
     
     func volume(volume: Double) {
         player.volume = Float(volume)
+    }
+    
+    func position() -> Int64? {
+        let positionInMillis = Int64(player.currentTime * 1000)
+        
+        NSLog("Ocarina::SinglePlayer => position (ms): \(positionInMillis)")
+        return positionInMillis
     }
 }
 
@@ -96,6 +116,7 @@ class PlayerDelegate {
     let stopDelegate: StopDelegate
     let seekDelegate: SeekDelegate
     let volumeDelegate: VolumeDelegate
+    let positionDelegate: PositionDelegate
     
     func load(_ id: Int, assetUrl: String, volume: Double, loop: Bool) {
         NSLog("Ocarina::PlayerDelegate => loading player \(id) from \(assetUrl) with delegate")
@@ -146,7 +167,11 @@ class PlayerDelegate {
         seekDelegate(id, positionInMillis)
     }
     
-    init(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate) {
+    func position(_ id: Int) -> Int64? {
+        return positionDelegate(id)
+    }
+    
+    init(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
         loadDelegate = load
         playDelegate = play
         pauseDelegate = pause
@@ -154,6 +179,7 @@ class PlayerDelegate {
         stopDelegate = stop
         volumeDelegate = volume
         seekDelegate = seek
+        positionDelegate = position
     }
 }
 
@@ -164,6 +190,7 @@ public typealias ResumeDelegate = (_ id: Int) -> Void
 public typealias StopDelegate = (_ id: Int) -> Void
 public typealias VolumeDelegate = (_ id: Int, _ volume: Double) -> Void
 public typealias SeekDelegate = (_ id: Int, _ positionInMillis: Int) -> Void
+public typealias PositionDelegate = (_ id: Int) -> Int64?
 
 public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
     static var players = [Int: Player]()
@@ -178,8 +205,8 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
         instance.registrar = registrar
     }
 
-    public static func useDelegate(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate) {
-        delegate = PlayerDelegate(load: load, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek)
+    public static func useDelegate(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
+        delegate = PlayerDelegate(load: load, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek, position: position)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -199,6 +226,8 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             seek(call, result: result)
         } else if (call.method == "dispose") {
             dispose(call, result: result)
+        } else if (call.method == "position") {
+            position(call, result: result)
         }
     }
     
@@ -348,6 +377,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             
             if let delegate = SwiftOcarinaPlugin.delegate {
                 delegate.seek(playerId, positionInMillis: positionInMillis)
+                result(0)
             } else {
                 let player = SwiftOcarinaPlugin.players[playerId]
                 player?.seek(position: positionInMillis)
@@ -371,6 +401,27 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
                 player?.stop()
                 SwiftOcarinaPlugin.players[playerId] = nil
                 result(0)
+            }
+        }
+    }
+    
+    func position(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments else {
+            return;
+        }
+        
+        if let myArgs = args as? [String: Any],
+            let playerId: Int = myArgs["playerId"] as? Int {
+            
+            if let delegate = SwiftOcarinaPlugin.delegate {
+                result(delegate.position(playerId))
+            } else {
+                guard let player = SwiftOcarinaPlugin.players[playerId] else {
+                    result(nil)
+                    return
+                }
+
+                result(player.position())
             }
         }
     }
