@@ -110,6 +110,7 @@ class SinglePlayer: Player {
 
 class PlayerDelegate {
     let loadDelegate: LoadDelegate
+    let disposeDelegate: DisposeDelegate
     let playDelegate: PlayDelegate
     let pauseDelegate: PauseDelegate
     let resumeDelegate: ResumeDelegate
@@ -135,6 +136,10 @@ class PlayerDelegate {
         }
 
         loadDelegate(id, file, loop, volume)
+    }
+    
+    func dispose(_ id: Int) {
+        disposeDelegate(id)
     }
     
     func play(_ id: Int) {
@@ -171,8 +176,9 @@ class PlayerDelegate {
         return positionDelegate(id)
     }
     
-    init(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
+    init(load: @escaping LoadDelegate, dispose: @escaping DisposeDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
         loadDelegate = load
+        disposeDelegate = dispose
         playDelegate = play
         pauseDelegate = pause
         resumeDelegate = resume
@@ -184,6 +190,7 @@ class PlayerDelegate {
 }
 
 public typealias LoadDelegate = (_ id: Int, _ file: AVAudioFile, _ loop: Bool, _ volume: Double) -> Void
+public typealias DisposeDelegate = (_ id: Int) -> Void
 public typealias PlayDelegate = (_ id: Int) -> Void
 public typealias PauseDelegate = (_ id: Int) -> Void
 public typealias ResumeDelegate = (_ id: Int) -> Void
@@ -205,13 +212,15 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
         instance.registrar = registrar
     }
 
-    public static func useDelegate(load: @escaping LoadDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
-        delegate = PlayerDelegate(load: load, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek, position: position)
+    public static func useDelegate(load: @escaping LoadDelegate, dispose: @escaping DisposeDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
+        delegate = PlayerDelegate(load: load, dispose: dispose, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek, position: position)
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if (call.method == "load") {
             load(call, result: result)
+        } else if (call.method == "dispose") {
+            dispose(call, result: result)
         } else if (call.method == "play") {
             play(call, result: result)
         } else if (call.method == "pause") {
@@ -224,8 +233,6 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             resume(call, result: result)
         } else if (call.method == "seek") {
             seek(call, result: result)
-        } else if (call.method == "dispose") {
-            dispose(call, result: result)
         } else if (call.method == "position") {
             position(call, result: result)
         }
@@ -275,6 +282,26 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
         }
     }
     
+    func dispose(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments else {
+            return;
+        }
+        
+        if let myArgs = args as? [String: Any],
+            let playerId: Int = myArgs["playerId"] as? Int {
+            
+            if let delegate = SwiftOcarinaPlugin.delegate {
+                delegate.dispose(playerId)
+                result(0)
+            } else {
+                let player = SwiftOcarinaPlugin.players[playerId]
+                player?.stop()
+                SwiftOcarinaPlugin.players[playerId] = nil
+                result(0)
+            }
+        }
+    }
+
     func play(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         guard let args = call.arguments else {
             return;
@@ -385,26 +412,7 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             }
         }
     }
-    
-    func dispose(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        guard let args = call.arguments else {
-            return;
-        }
-        
-        if let myArgs = args as? [String: Any],
-            let playerId: Int = myArgs["playerId"] as? Int {
-            
-            if let delegate = SwiftOcarinaPlugin.delegate {
-                result(FlutterMethodNotImplemented)
-            } else {
-                let player = SwiftOcarinaPlugin.players[playerId]
-                player?.stop()
-                SwiftOcarinaPlugin.players[playerId] = nil
-                result(0)
-            }
-        }
-    }
-    
+
     func position(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         guard let args = call.arguments else {
             return;
