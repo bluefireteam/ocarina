@@ -172,7 +172,7 @@ class PlayerDelegate {
         seekDelegate(id, positionInMillis)
     }
     
-    func position(_ id: Int) -> Int64? {
+    func position(_ id: Int) -> Int64 {
         return positionDelegate(id)
     }
     
@@ -197,7 +197,7 @@ public typealias ResumeDelegate = (_ id: Int) -> Void
 public typealias StopDelegate = (_ id: Int) -> Void
 public typealias VolumeDelegate = (_ id: Int, _ volume: Double) -> Void
 public typealias SeekDelegate = (_ id: Int, _ positionInMillis: Int) -> Void
-public typealias PositionDelegate = (_ id: Int) -> Int64?
+public typealias PositionDelegate = (_ id: Int) -> Int64
 
 public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
     static var players = [Int: Player]()
