@@ -60,8 +60,7 @@ class LoopPlayer: Player {
         }
         
         let positionInMillis = Int64((Float64(value) / Float64(timescale)) * 1000)
-        
-        NSLog("Ocarina::LoopPlayer => position (ms): \(positionInMillis)")
+
         return positionInMillis
     }
 }
@@ -102,8 +101,7 @@ class SinglePlayer: Player {
     
     func position() -> Int64? {
         let positionInMillis = Int64(player.currentTime * 1000)
-        
-        NSLog("Ocarina::SinglePlayer => position (ms): \(positionInMillis)")
+
         return positionInMillis
     }
 }
@@ -120,18 +118,17 @@ class PlayerDelegate {
     let positionDelegate: PositionDelegate
     
     func load(_ id: Int, assetUrl: String, volume: Double, loop: Bool) {
-        NSLog("Ocarina::PlayerDelegate => loading player \(id) from \(assetUrl) with delegate")
         let url: URL = URL(fileURLWithPath: assetUrl)
         let fileForPlayback: AVAudioFile?
         do {
             fileForPlayback = try AVAudioFile(forReading: url)
         } catch let error {
-            NSLog("Cannot play music. Error opening file \(url) for reading \(error).")
+            NSLog("SwiftOcarinaPlugin::load => Cannot play music. Error opening file \(url) for reading \(error).")
             return
         }
         
         guard let file = fileForPlayback else {
-            NSLog("Cannot play music. Cannot open file for reading \(url).")
+            NSLog("SwiftOcarinaPlugin::load => Cannot play music. Cannot open file for reading \(url).")
             return
         }
 
@@ -143,32 +140,26 @@ class PlayerDelegate {
     }
     
     func play(_ id: Int) {
-        NSLog("Ocarina::PlayerDelegate => playing \(id) with delegate")
         playDelegate(id)
     }
 
     func pause(_ id: Int) {
-        NSLog("Ocarina::PlayerDelegate => pausing \(id) with delegate")
         pauseDelegate(id)
     }
 
     func resume(_ id: Int) {
-        NSLog("Ocarina::PlayerDelegate => resuming \(id) with delegate")
         resumeDelegate(id)
     }
 
     func stop(_ id: Int) {
-        NSLog("Ocarina::PlayerDelegate => stopping \(id) with delegate")
         stopDelegate(id)
     }
 
     func volume(_ id: Int, volume: Double) {
-        NSLog("Ocarina::PlayerDelegate => setting volume for player \(id) to \(volume) with delegate")
         volumeDelegate(id, volume)
     }
     
     func seek(_ id: Int, positionInMillis: Int) {
-        NSLog("Ocarina::PlayerDelegate => seeking for player \(id) to position \(positionInMillis) ms")
         seekDelegate(id, positionInMillis)
     }
     
