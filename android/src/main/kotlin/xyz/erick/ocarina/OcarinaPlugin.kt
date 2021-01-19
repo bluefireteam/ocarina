@@ -94,6 +94,11 @@ abstract class OcarinaPlayer {
     player.seekTo(position);
   }
 
+  fun position(): Long {
+    checkInitialized();
+    return player.getCurrentPosition();
+  }
+
   fun volume(volume: Double) {
     checkInitialized();
     this.volume = volume;
@@ -166,73 +171,115 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     if (call.method == "load") {
-      val id = playerIds;
-      val url = call.argument<String>("url");
-      val packageName = call.argument<String>("package");
-      val volume = call.argument<Double>("volume");
-      val loop = call.argument<Boolean>("loop");
-      val isAsset = call.argument<Boolean>("isAsset");
-
-      var player: OcarinaPlayer = if (isAsset!!) {
-        AssetOcarinaPlayer(url!!, packageName, volume!!, loop!!, context, flutterAssets);
-      } else {
-        FileOcarinaPlayer(url!!, volume!!, loop!!, context);
-      }
-      player.load();
-
-      players.put(id, player);
-
-      playerIds++;
-
-      result.success(id);
+      load(call, result)
     } else if (call.method == "play") {
-      val playerId = call.argument<Int>("playerId");
-      val player = players[playerId!!];
-      player!!.play();
-
-      result.success(0);
+      play(call, result)
     } else if (call.method == "stop") {
-      val playerId = call.argument<Int>("playerId");
-      val player = players[playerId!!];
-      player!!.stop();
-
-      result.success(0);
+      stop(call, result)
     } else if (call.method == "pause") {
-      val playerId = call.argument<Int>("playerId");
-      val player = players[playerId!!];
-      player!!.pause();
-
-      result.success(0);
+      pause(call, result)
     } else if (call.method == "resume") {
-      val playerId = call.argument<Int>("playerId");
-      val player = players[playerId!!];
-      player!!.resume();
-
-      result.success(0);
+      resume(call, result)
     } else if (call.method == "seek") {
-      val playerId = call.argument<Int>("playerId");
-      val position = call.argument<Int>("position");
-      val player = players[playerId!!];
-      player!!.seek(position!!.toLong());
-
-      result.success(0);
+      seek(call, result)
+    } else if (call.method == "position") {
+      position(call, result)
     } else if (call.method == "volume") {
-      val playerId = call.argument<Int>("playerId");
-      val volume = call.argument<Double>("volume");
-      val player = players[playerId!!];
-      player!!.volume(volume!!);
-
-      result.success(0);
+      volume(call, result)
     } else if (call.method == "dispose") {
-      val playerId = call.argument<Int>("playerId");
-      val player = players[playerId!!];
-      player!!.dispose();
-      players.remove(playerId!!);
-
-      result.success(0);
+      dispose(call, result)
     } else {
       result.notImplemented()
     }
+  }
+
+  fun load(@NonNull call: MethodCall, @NonNull result: Result) {
+    val id = playerIds;
+    val url = call.argument<String>("url");
+    val packageName = call.argument<String>("package");
+    val volume = call.argument<Double>("volume");
+    val loop = call.argument<Boolean>("loop");
+    val isAsset = call.argument<Boolean>("isAsset");
+
+    var player: OcarinaPlayer = if (isAsset!!) {
+      AssetOcarinaPlayer(url!!, packageName, volume!!, loop!!, context, flutterAssets);
+    } else {
+      FileOcarinaPlayer(url!!, volume!!, loop!!, context);
+    }
+    player.load();
+
+    players.put(id, player);
+
+    playerIds++;
+
+    result.success(id);
+  }
+
+  fun play(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    player!!.play();
+
+    result.success(0);
+  }
+
+  fun stop(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    player!!.stop();
+
+    result.success(0);
+  }
+
+  fun pause(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    player!!.pause();
+
+    result.success(0);
+  }
+
+  fun resume(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    player!!.resume();
+
+    result.success(0);
+  }
+
+  fun seek(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val position = call.argument<Int>("position");
+    val player = players[playerId!!];
+    player!!.seek(position!!.toLong());
+
+    result.success(0);
+  }
+
+  fun position(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    val position = player!!.position();
+
+    result.success(position);
+  }
+
+  fun volume(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val volume = call.argument<Double>("volume");
+    val player = players[playerId!!];
+    player!!.volume(volume!!);
+
+    result.success(0);
+  }
+
+  fun dispose(@NonNull call: MethodCall, @NonNull result: Result) {
+    val playerId = call.argument<Int>("playerId");
+    val player = players[playerId!!];
+    player!!.dispose();
+    players.remove(playerId!!);
+
+    result.success(0);
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {

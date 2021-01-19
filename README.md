@@ -1,6 +1,6 @@
 # Ocarina
 
-Ocarina is a simple and easy to usade audio package for Flutter. Its goal is to support audio play from local file (from assets, or filesystem), And to support it across all platforms that Flutter runs.
+Ocarina is a simple and easy to use audio package for Flutter. Its goal is to support audio play from local file (from assets, or filesystem), And to support it across all platforms that Flutter runs.
 
 Right now, __we only support mobile (Android and iOS)__ and will eventually supporting Web and Desktop (Linux, MacOS and Windows).
 
@@ -55,6 +55,10 @@ Stops the playback, it can be started again by calling `play` again.
 
 Moves the playback postion to the passed `Duration`
 
+`position`
+
+Retrieves playback position in milliseconds.
+
 `updateVolume(double)`
 
 Updates the volume, must be a value between 0 and 1
@@ -62,3 +66,34 @@ Updates the volume, must be a value between 0 and 1
 `dispose`
 
 Clears the loaded resources in memory, to use the instance again a subsequent call on the `load` method is required
+
+## iOS Delegation
+
+This feature was developed in concert with the development of the `AVAudioEngineDevice` in [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) version `0.6.4` to address the issue in iOS in which [the operating system gives priority to the `VoiceProcessingIO` Audio Unit](https://developer.apple.com/forums/thread/22133), causing output volume of audio files from `ocarina` to be significantly diminished when used while a call is underway. While this was the reason for introducing this feature to `ocarina`, it was designed to be agnostic to the nature of the delegate. It is strongly advised that if you are writing your own delegate for iOS, that you seek to mirror the behaviour of `ocarina` itself as much as is possible so as to reduce the possibility of inconsistent behaviour across platforms.
+
+If you found your way here because `ocarina` was recommended by [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), the following modification to your `AppDelegate` will setup the `AVAudioEngineDevice` as the delegate for `ocarina`:
+
+```swift
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    GeneratedPluginRegistrant.register(with: self)
+
+    let audioDevice = AVAudioEngineDevice()
+    SwiftTwilioProgrammableVideoPlugin.audioDevice = audioDevice
+    SwiftOcarinaPlugin.useDelegate(
+        load: audioDevice.addMusicNode,
+        dispose: audioDevice.disposeMusicNode,
+        play: audioDevice.playMusic,
+        pause: audioDevice.pauseMusic,
+        resume: audioDevice.resumeMusic,
+        stop: audioDevice.stopMusic,
+        volume: audioDevice.setMusicVolume,
+        seek: audioDevice.seekPosition,
+        position: audioDevice.getPosition
+    )
+
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+```

@@ -1,3 +1,9 @@
+## 0.0.5
+
+ * Added method for getting playback position for an audiofile
+ * Added ability to delegate native implementation in iOS
+    * Designed for compatibility with [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) version `0.6.4`+
+
 ## 0.0.4
 
  * Better handling on iOS when an asset is not found

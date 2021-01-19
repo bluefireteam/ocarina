@@ -68,6 +68,11 @@ class OcarinaPlayer {
         'seek', {'playerId': _id, 'position': duration.inMilliseconds});
   }
 
+  Future<int> position() async {
+    _ensureLoaded();
+    return await _channel.invokeMethod('position', {'playerId': _id});
+  }
+
   Future<void> updateVolume(double volume) async {
     _ensureLoaded();
     await _channel.invokeMethod('volume', {'playerId': _id, 'volume': volume});
