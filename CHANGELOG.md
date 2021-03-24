@@ -1,3 +1,7 @@
+## 0.0.6
+
+* Migrate to null safety
+
 ## 0.0.5
 
  * Added method for getting playback position for an audiofile
