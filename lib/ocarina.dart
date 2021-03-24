@@ -6,13 +6,13 @@ class OcarinaPlayer {
   static const MethodChannel _channel = const MethodChannel('ocarina');
 
   /// Player id
-  int _id;
+  int? _id;
   double volume;
   final bool loop;
 
-  String asset;
-  String package;
-  String filePath;
+  String? asset;
+  String? package;
+  String? filePath;
 
   OcarinaPlayer({
     this.asset,
@@ -68,7 +68,7 @@ class OcarinaPlayer {
         'seek', {'playerId': _id, 'position': duration.inMilliseconds});
   }
 
-  Future<int> position() async {
+  Future<int?> position() async {
     _ensureLoaded();
     return await _channel.invokeMethod('position', {'playerId': _id});
   }
