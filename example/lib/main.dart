@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({required this.title});
 
   final String title;
 
@@ -33,13 +33,13 @@ class MyHomePage extends StatefulWidget {
 const staticFileUrl = 'https://luan.xyz/files/audio/ambient_c_motion.mp3';
 
 class _MyHomePageState extends State<MyHomePage> {
-  OcarinaPlayer _player;
-  String _localFilePath;
+  OcarinaPlayer? _player;
+  String? _localFilePath;
   bool _loop = true;
   bool _fetchingFile = false;
 
   Future _loadFile() async {
-    final bytes = await readBytes(staticFileUrl);
+    final bytes = await readBytes(Uri.parse(staticFileUrl));
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/audio.mp3');
 
@@ -60,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: (_player != null
             ? PlayerWidget(
-                player: _player,
+                player: _player!,
                 onBack: () {
                   setState(() {
                     _localFilePath = null;
@@ -70,14 +70,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 })
             : Column(
                 children: [
-                  RaisedButton(
+                  ElevatedButton(
                       child: Text(_loop ? "Loop mode" : "Single play mode"),
                       onPressed: () async {
                         setState(() {
                           _loop = !_loop;
                         });
                       }),
-                  RaisedButton(
+                  ElevatedButton(
                       child: Text("Play asset audio"),
                       onPressed: () async {
                         final player = OcarinaPlayer(
@@ -87,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           _player = player;
                         });
                       }),
-                  RaisedButton(
+                  ElevatedButton(
                       child: Text(_fetchingFile
                           ? "Fetching file..."
                           : "Download file to Device, and play it"),
@@ -116,7 +116,7 @@ class PlayerWidget extends StatelessWidget {
   final OcarinaPlayer player;
   final VoidCallback onBack;
 
-  PlayerWidget({this.player, this.onBack});
+  PlayerWidget({required this.player, required this.onBack});
 
   @override
   Widget build(_) {
@@ -133,9 +133,9 @@ class PlayerWidget extends StatelessWidget {
                 return Column(
                   children: [
                     Text("Error loading player"),
-                    RaisedButton(
+                    ElevatedButton(
                       child: Text("Go Back"),
-                      onPressed: onBack?.call,
+                      onPressed: onBack.call,
                     ),
                   ],
                 );
@@ -143,61 +143,60 @@ class PlayerWidget extends StatelessWidget {
               return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Play"),
                         onPressed: () async {
                           await player.play();
                         }),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Stop"),
                         onPressed: () async {
                           await player.stop();
                         }),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Pause"),
                         onPressed: () async {
                           await player.pause();
                         }),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Resume"),
                         onPressed: () async {
                           await player.resume();
                         }),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Seek to 5 secs"),
                         onPressed: () async {
                           await player.seek(Duration(seconds: 5));
                         }),
                     Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Text("Volume"),
-                      RaisedButton(
+                      ElevatedButton(
                           child: Text("0.2"),
                           onPressed: () async {
                             await player.updateVolume(0.2);
                           }),
-                      RaisedButton(
+                      ElevatedButton(
                           child: Text("0.5"),
                           onPressed: () async {
                             await player.updateVolume(0.5);
                           }),
-                      RaisedButton(
+                      ElevatedButton(
                           child: Text("1.0"),
                           onPressed: () async {
                             await player.updateVolume(1.0);
                           }),
                     ]),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Text("Dispose"),
                         onPressed: () async {
                           await player.dispose();
                         }),
-                    RaisedButton(
+                    ElevatedButton(
                       child: Text("Go Back"),
-                      onPressed: onBack?.call,
+                      onPressed: onBack.call,
                     ),
                   ]);
           }
-          return Container();
         });
   }
 }
