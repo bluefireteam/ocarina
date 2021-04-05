@@ -68,9 +68,14 @@ class OcarinaPlayer {
         'seek', {'playerId': _id, 'position': duration.inMilliseconds});
   }
 
-  Future<int?> position() async {
+  Future<int> position() async {
     _ensureLoaded();
-    return await _channel.invokeMethod('position', {'playerId': _id});
+    final pos = await _channel.invokeMethod('position', {'playerId': _id});
+    if (pos == null) {
+      throw PlatformException(
+          code: 'PositionNull', message: 'Position is null');
+    }
+    return pos;
   }
 
   Future<void> updateVolume(double volume) async {
