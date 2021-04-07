@@ -73,7 +73,9 @@ class OcarinaPlayer {
     final pos = await _channel.invokeMethod('position', {'playerId': _id});
     if (pos == null) {
       throw PlatformException(
-          code: 'PositionNull', message: 'Position is null');
+        code: 'PositionNull',
+        message: 'Position is null',
+      );
     }
     return pos;
   }
