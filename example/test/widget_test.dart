@@ -7,7 +7,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:ocarina_example/main.dart';
 
 void main() {
@@ -21,7 +20,7 @@ void main() {
         (Widget widget) =>
             widget is Text &&
             widget.data != null &&
-            widget.data!.startsWith('Running on:'),
+            widget.data!.startsWith('Ocarina Example'),
       ),
       findsOneWidget,
     );
