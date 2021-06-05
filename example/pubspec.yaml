@@ -10,16 +10,20 @@ dependencies:
   flutter:
     sdk: flutter
 
-  path_provider: ^2.0.1
-  http: ^0.13.1
+  path_provider: ^2.0.2
+  http: ^0.13.3
 
   ocarina:
     path: ../
 
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.3
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_driver:
     sdk: flutter
 
 flutter:
