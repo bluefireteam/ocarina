@@ -1,3 +1,7 @@
+## 0.1.1
+
+ * Update to exoplayer 2.14.0
+
 ## 0.1.0
 
 * Migrate to null safety
