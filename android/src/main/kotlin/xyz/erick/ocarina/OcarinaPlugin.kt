@@ -27,12 +27,14 @@ abstract class OcarinaPlayer {
   protected val url: String;
   protected lateinit var player: SimpleExoPlayer;
   protected lateinit var mediaSource: MediaSource;
+  private val listener: OcarinaListener;
 
   constructor(url: String, volume: Double, loop: Boolean, context: Context) {
     this.url = url;
     this.volume = volume;
     this.loop = loop;
     this.context = context;
+    this.listener = OcarinaListener(url);
   }
 
   // trying to track https://github.com/erickzanardo/ocarina/issues/4
@@ -105,6 +107,14 @@ abstract class OcarinaPlayer {
     player.volume = volume.toFloat();
   }
 
+  internal fun addListener() {
+    player.addListener(listener);
+  }
+
+  internal fun removeListener() {
+    player.removeListener(listener);
+  }
+
   protected fun mediaSourceFromUriString(uri: String): MediaSource {
     val mediaItem = MediaItem.Builder().setUri(Uri.parse(uri)).build();
     return ProgressiveMediaSource.Factory(
@@ -148,9 +158,14 @@ class FileOcarinaPlayer(url: String, volume: Double, loop: Boolean, context: Con
   }
 }
 
+class OcarinaListener(private val url: String) : Player.Listener {
+  override fun onIsPlayingChanged(isPlaying: Boolean) {
+    OcarinaPlugin.notifyListeners(url, isPlaying)
+  }
+}
+
 public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
-  private val players = mutableMapOf<Int, OcarinaPlayer>();
   private var playerIds = 0;
   private lateinit var flutterAssets: FlutterPlugin.FlutterAssets;
   private lateinit var context: Context;
@@ -164,11 +179,35 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
   }
 
   companion object {
+    private val players = mutableMapOf<Int, OcarinaPlayer>();
+    private val listeners: HashMap<String, (url: String, isPlaying: Boolean) -> Unit> = hashMapOf();
+
     @JvmStatic
     fun registerWith(registrar: Registrar) {
       val channel = MethodChannel(registrar.messenger(), "ocarina")
 
       channel.setMethodCallHandler(OcarinaPlugin())
+    }
+
+    @JvmStatic
+    fun notifyListeners(url: String, isPlaying: Boolean) {
+      listeners.values.forEach { it.invoke(url, isPlaying) }
+    }
+
+    @JvmStatic
+    fun addListener(@NonNull id: String, @NonNull listener: (url: String, isPlaying: Boolean) -> Unit) {
+      if (listeners.isEmpty() && players.isNotEmpty()) {
+        players.values.forEach { it.addListener() }
+      }
+      listeners.put(id, listener);
+    }
+
+    @JvmStatic
+    fun removeListener(@NonNull id: String) {
+      listeners.remove(id);
+      if (listeners.isEmpty() && players.isNotEmpty()) {
+        players.values.forEach { it.removeListener() }
+      }
     }
   }
 
@@ -214,6 +253,10 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
     players.put(id, player);
 
     playerIds++;
+
+    if (!listeners.isEmpty()) {
+      player.addListener()
+    }
 
     result.success(id);
   }

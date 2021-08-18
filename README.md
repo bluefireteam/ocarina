@@ -69,7 +69,7 @@ Clears the loaded resources in memory, to use the instance again a subsequent ca
 
 ## iOS Delegation
 
-This feature was developed in concert with the development of the `AVAudioEngineDevice` in [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) version `0.6.4` to address the issue in iOS in which [the operating system gives priority to the `VoiceProcessingIO` Audio Unit](https://developer.apple.com/forums/thread/22133), causing output volume of audio files from `ocarina` to be significantly diminished when used while a call is underway. While this was the reason for introducing this feature to `ocarina`, it was designed to be agnostic to the nature of the delegate. It is strongly advised that if you are writing your own delegate for iOS, that you seek to mirror the behaviour of `ocarina` itself as much as is possible so as to reduce the possibility of inconsistent behaviour across platforms.
+This feature was developed in concert with the development of the `AVAudioEngineDevice` in [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) version `0.10.0` to address the issue in iOS in which [the operating system gives priority to the `VoiceProcessingIO` Audio Unit](https://developer.apple.com/forums/thread/22133), causing output volume of audio files from `ocarina` to be significantly diminished when used while a call is underway. While this was the reason for introducing this feature to `ocarina`, it was designed to be agnostic to the nature of the delegate. It is strongly advised that if you are writing your own delegate for iOS, that you seek to mirror the behaviour of `ocarina` itself as much as is possible so as to reduce the possibility of inconsistent behaviour across platforms.
 
 If you found your way here because `ocarina` was recommended by [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), the following modification to your `AppDelegate` will setup the `AVAudioEngineDevice` as the delegate for `ocarina`:
 
@@ -80,8 +80,11 @@ If you found your way here because `ocarina` was recommended by [`twilio_program
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    let audioDevice = AVAudioEngineDevice()
-    SwiftTwilioProgrammableVideoPlugin.audioDevice = audioDevice
+    let audioDevice = AVAudioEngineDevice.getInstance()
+    SwiftTwilioProgrammableVideoPlugin.setCustomAudioDevice(
+        audioDevice,
+        onConnected: audioDevice.onConnected,
+        onDisconnected: audioDevice.onDisconnected)
     SwiftOcarinaPlugin.useDelegate(
         load: audioDevice.addMusicNode,
         dispose: audioDevice.disposeMusicNode,
@@ -96,4 +99,32 @@ If you found your way here because `ocarina` was recommended by [`twilio_program
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+```
+
+## Android Audio Player State Listeners
+
+This feature was also developed in concert with the ongoing development of the audio system for [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), though it was designed to be agnostic to what other plugins you are using. As such, you can certainly add custom listeners via this mechanism to receive the same notifications. The only requirement is that they have the following signature:
+
+```kotlin
+(url: String, isPlaying: Boolean) -> Unit
+```
+
+If you wish to use this feature with [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), simply add the following to your `MainActivity.kt`.
+
+The benefit of using this feature with the[`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) is that it will enable that plugin to update the [Audio Focus](https://developer.android.com/guide/topics/media-apps/audio-focus) and usage of Bluetooth Sco based upon whether there are active audio players, in addition to an active call.
+
+```kotlin
+    private lateinit var PACKAGE_ID: String
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        PACKAGE_ID = applicationContext.packageName
+        OcarinaPlugin.addListener(PACKAGE_ID, TwilioProgrammableVideoPlugin.getAudioPlayerEventListener());
+    }
+
+    override fun cleanUpFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+        super.cleanUpFlutterEngine(flutterEngine)
+        OcarinaPlugin.removeListener(PACKAGE_ID)
+    }
 ```

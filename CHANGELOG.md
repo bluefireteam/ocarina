@@ -1,3 +1,7 @@
+## 0.1.2
+
+ * **Android** Added ability to receive notifications when a players `isPlaying` state changes.
+
 ## 0.1.1
 
  * Update to exoplayer 2.14.0
