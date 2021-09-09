@@ -101,17 +101,21 @@ If you found your way here because `ocarina` was recommended by [`twilio_program
   }
 ```
 
-## Android Audio Player State Listeners
+## Audio Player State Listeners
 
 This feature was also developed in concert with the ongoing development of the audio system for [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), though it was designed to be agnostic to what other plugins you are using. As such, you can certainly add custom listeners via this mechanism to receive the same notifications. The only requirement is that they have the following signature:
 
+Android:
 ```kotlin
 (url: String, isPlaying: Boolean) -> Unit
 ```
 
-If you wish to use this feature with [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), simply add the following to your `MainActivity.kt`.
+iOS
+```swift
+(_ url: String, _ isPlaying: Bool) -> Void
+```
 
-The benefit of using this feature with the[`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) is that it will enable that plugin to update the [Audio Focus](https://developer.android.com/guide/topics/media-apps/audio-focus) and usage of Bluetooth Sco based upon whether there are active audio players, in addition to an active call.
+If you wish to use this feature with [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video), simply add the following to your `MainActivity.kt`.
 
 ```kotlin
     private lateinit var PACKAGE_ID: String
@@ -126,5 +130,31 @@ The benefit of using this feature with the[`twilio_programmable_video`](https://
     override fun cleanUpFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.cleanUpFlutterEngine(flutterEngine)
         OcarinaPlugin.removeListener(PACKAGE_ID)
+    }
+```
+The benefit of using this feature (on Android) with the [`twilio_programmable_video`](https://pub.dev/packages/twilio_programmable_video) is that it will enable that plugin to update the [Audio Focus](https://developer.android.com/guide/topics/media-apps/audio-focus) and usage of Bluetooth Sco based upon whether there are active audio players, in addition to an active call.
+
+Alternatively, you can use it with your own listener for your own purposes.
+
+This feature has not been integrated with `twilio_programmable_video` on iOS, out of preference for usage of the `AVAudioEngineDevice` as a delegate for `ocarina`.
+
+If you wish to use this feature on iOS, add the following to  your `AppDelegate.swift`:
+
+```swift
+    let bundleID = Bundle.main.bundleIdentifier
+
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        SwiftOcarinaPlugin.addListener(bundleID!, ocarinaListener)
+    }
+
+    override func applicationWillTerminate(_ application: UIApplication) {
+        SwiftOcarinaPlugin.removeListener(bundleID!)
+    }
+
+    func ocarinaListener(_ id: String, _ isPlaying: Bool) {
+        // do things
     }
 ```

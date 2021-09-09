@@ -1,6 +1,6 @@
 ## 0.1.2
 
- * **Android** Added ability to receive notifications when a players `isPlaying` state changes.
+ * Added ability to receive notifications when a players `isPlaying` state changes.
 
 ## 0.1.1
 
