@@ -11,14 +11,19 @@ protocol Player {
     func seek(position: Int) -> Void
     func volume(volume: Double) -> Void
     func position() -> Int64?
+    func addListener() -> Void
+    func removeListener() -> Void
 }
 
 class LoopPlayer: Player {
     let player: AVQueuePlayer
     let playerLooper: AVPlayerLooper
+    var listener: NSKeyValueObservation?
+    let url: String
     
     required init(url: String, volume: Double) {
-        let asset = AVAsset(url: URL(fileURLWithPath: url ))
+        self.url = url
+        let asset = AVAsset(url: URL(fileURLWithPath: url))
         
         let playerItem = AVPlayerItem(asset: asset)
 
@@ -63,15 +68,39 @@ class LoopPlayer: Player {
 
         return positionInMillis
     }
+    
+    func addListener() -> Void {
+        if listener == nil {
+            listener = player.observe(\AVQueuePlayer.rate, options: [.old, .new]) { [unowned self] _, change in
+                if let newValue = change.newValue,
+                   let oldValue = change.oldValue,
+                   newValue != oldValue {
+                    SwiftOcarinaPlugin.notifyListeners(url: url, isPlaying: newValue > 0)
+                }
+            }
+        }
+    }
+    
+    func removeListener() -> Void {
+        listener?.invalidate()
+        listener = nil
+    }
 }
 
 class SinglePlayer: Player {
-    var player: AVAudioPlayer
+    let player: AVPlayer
+    var listener: NSKeyValueObservation?
+    let url: String
     
     required init(url: String, volume: Double) {
-        try! self.player = AVAudioPlayer(contentsOf: URL(fileURLWithPath: url ))
+        self.url = url
+        let asset = AVAsset(url: URL(fileURLWithPath: url))
+        
+        let playerItem = AVPlayerItem(asset: asset)
+
+        player = AVPlayer(playerItem: playerItem)
+
         self.player.volume = Float(volume)
-        self.player.prepareToPlay()
     }
     
     func play() {
@@ -89,10 +118,11 @@ class SinglePlayer: Player {
     
     func stop() {
         pause()
+        seek(position: 0)
     }
     
     func seek(position: Int) {
-        player.currentTime = Float64(position) / 1000
+        player.seek(to: CMTimeMakeWithSeconds(Float64(position / 1000), preferredTimescale: Int32(NSEC_PER_SEC)))
     }
     
     func volume(volume: Double) {
@@ -100,9 +130,31 @@ class SinglePlayer: Player {
     }
     
     func position() -> Int64? {
-        let positionInMillis = Int64(player.currentTime * 1000)
+        guard let value = player.currentItem?.currentTime().value,
+              let timescale = player.currentItem?.currentTime().timescale else {
+            return nil
+        }
+        
+        let positionInMillis = Int64((Float64(value) / Float64(timescale)) * 1000)
 
         return positionInMillis
+    }
+
+    func addListener() -> Void {
+        if listener == nil {
+            listener = player.observe(\AVPlayer.rate, options: [.old, .new]) { [unowned self] _, change in
+                if let newValue = change.newValue,
+                   let oldValue = change.oldValue,
+                   newValue != oldValue {
+                    SwiftOcarinaPlugin.notifyListeners(url: url, isPlaying: newValue > 0)
+                }
+            }
+        }
+    }
+
+    func removeListener() -> Void {
+        listener?.invalidate()
+        listener = nil
     }
 }
 
@@ -166,7 +218,7 @@ class PlayerDelegate {
     func position(_ id: Int) -> Int64 {
         return positionDelegate(id)
     }
-    
+
     init(load: @escaping LoadDelegate, dispose: @escaping DisposeDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
         loadDelegate = load
         disposeDelegate = dispose
@@ -190,8 +242,11 @@ public typealias VolumeDelegate = (_ id: Int, _ volume: Double) -> Void
 public typealias SeekDelegate = (_ id: Int, _ positionInMillis: Int) -> Void
 public typealias PositionDelegate = (_ id: Int) -> Int64
 
+public typealias Listener = (_ url: String, _ isPlaying: Bool) -> Void
+
 public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
     static var players = [Int: Player]()
+    static var listeners = [String: Listener]()
     static var id: Int = 0;
     static var delegate: PlayerDelegate?
     var registrar: FlutterPluginRegistrar? = nil
@@ -205,6 +260,32 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
 
     public static func useDelegate(load: @escaping LoadDelegate, dispose: @escaping DisposeDelegate, play: @escaping PlayDelegate, pause: @escaping PauseDelegate, resume: @escaping ResumeDelegate, stop: @escaping StopDelegate, volume: @escaping VolumeDelegate, seek: @escaping SeekDelegate, position: @escaping PositionDelegate) {
         delegate = PlayerDelegate(load: load, dispose: dispose, play: play, pause: pause, resume: resume, stop: stop, volume: volume, seek: seek, position: position)
+    }
+    
+    public static func notifyListeners(url: String, isPlaying: Bool) {
+        listeners.values.forEach { listener in
+            listener(url, isPlaying)
+        }
+    }
+
+    public static func addListener(_ id: String, _ listener: @escaping Listener) {
+        NSLog("SwiftOcarinaPlugin::addListener => id: \(id)")
+        if listeners.isEmpty && !players.isEmpty {
+            players.values.forEach { player in
+                player.addListener()
+            }
+        }
+        
+        listeners[id] = listener
+    }
+    
+    public static func removeListener(_ id: String) {
+        listeners.removeValue(forKey: id)
+        if listeners.isEmpty {
+            players.values.forEach { player in
+                player.removeListener()
+            }
+        }
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -268,6 +349,10 @@ public class SwiftOcarinaPlugin: NSObject, FlutterPlugin {
             }
             
             SwiftOcarinaPlugin.id = SwiftOcarinaPlugin.id + 1
+            
+            if let player = SwiftOcarinaPlugin.players[id], !SwiftOcarinaPlugin.listeners.isEmpty {
+                player.addListener()
+            }
             
             result(id)
         }
