@@ -4,6 +4,10 @@ Ocarina is a simple and easy to use audio package for Flutter. Its goal is to su
 
 Right now, __we only support mobile (Android and iOS)__ and will eventually supporting Web and Desktop (Linux, MacOS and Windows).
 
+## Discord community
+
+If you have any questions, potential feature requests that you want to discuss with us you can join the [Blue Fire Discord server](https://discord.gg/rMqpQHcv4Q).
+
 ## How to use
 
 Using a file on your assets
