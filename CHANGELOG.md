@@ -1,3 +1,7 @@
+## 0.1.3
+
+ * chore(android): migrate to AGP8, increment target SDK (Thanks @orestesgaolin)
+
 ## 0.1.2
 
  * Added ability to receive notifications when a players `isPlaying` state changes.
