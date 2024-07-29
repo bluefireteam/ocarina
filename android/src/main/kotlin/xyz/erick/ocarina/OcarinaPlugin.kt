@@ -330,5 +330,9 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
+    players.values.forEach {
+      it.dispose();
+    }
+    players.clear()
   }
 }
