@@ -17,7 +17,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.lang.RuntimeException
 
 abstract class OcarinaPlayer {
@@ -181,13 +180,6 @@ public class OcarinaPlugin: FlutterPlugin, MethodCallHandler {
   companion object {
     private val players = mutableMapOf<Int, OcarinaPlayer>();
     private val listeners: HashMap<String, (url: String, isPlaying: Boolean) -> Unit> = hashMapOf();
-
-    @JvmStatic
-    fun registerWith(registrar: Registrar) {
-      val channel = MethodChannel(registrar.messenger(), "ocarina")
-
-      channel.setMethodCallHandler(OcarinaPlugin())
-    }
 
     @JvmStatic
     fun notifyListeners(url: String, isPlaying: Boolean) {
