@@ -2,14 +2,14 @@ group 'xyz.erick.ocarina'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.9.20'
+    ext.kotlin_version = '2.2.20'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath 'com.android.tools.build:gradle:8.13.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 36
     namespace "xyz.erick.ocarina"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
